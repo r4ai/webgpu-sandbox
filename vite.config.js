@@ -1,0 +1,19 @@
+import { resolve } from "path";
+
+const root = resolve(__dirname, "src");
+const outDir = resolve(__dirname, "dist");
+
+/** @type {import('vite').UserConfig} */
+export default {
+  base: "/webgpu-sandbox/",
+  root,
+  build: {
+    outDir,
+    rollupOptions: {
+      input: {
+        main: resolve(root, "index.html"),
+        triangle_2d: resolve(root, "triangle_2d", "index.html"),
+      },
+    },
+  },
+};
