@@ -1,6 +1,7 @@
 # WebGPU Sandbox
 
 - triangle_2d
+- square_2d
 
 ## Development
 
