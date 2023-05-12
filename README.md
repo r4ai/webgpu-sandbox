@@ -2,6 +2,7 @@
 
 - triangle_2d
 - square_2d
+- cube_3d
 
 ## Development
 
