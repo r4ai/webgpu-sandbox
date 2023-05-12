@@ -37,10 +37,6 @@ async function init() {
     -0.8, -0.8, 0, 1,    1, 0, 0, 1,  // 左下
     -0.8, 0.8, 0, 1,     1, 1, 0, 1,  // 左上
     0.8, 0.8, 0, 1,      0, 1, 1, 1,  // 右上
-
-    // 右下の三角形
-    -0.8, -0.8, 0, 1,    1, 0, 0, 1,  // 左下
-    0.8, 0.8, 0, 1,      0, 1, 1, 1,  // 右上
     0.8, -0.8, 0, 1,     0, 0, 1, 1,  // 右下
  ]);
   const indices = new Uint16Array([0, 1, 2, 0, 2, 3]);
@@ -50,8 +46,13 @@ async function init() {
     // buffer will be used as a vertex buffer and the destination of copy operations.
     usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
   });
+  const indicesBuffer = device.createBuffer({
+    size: indices.byteLength,
+    usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
+  });
 
   device.queue.writeBuffer(vertexBuffer, 0, vertices, 0, vertices.length);
+  device.queue.writeBuffer(indicesBuffer, 0, indices, 0, indices.length);
 
   // create a render pipeline
   const pipeline = device.createRenderPipeline({
@@ -117,7 +118,8 @@ async function init() {
   const passEncoder = commandEncoder?.beginRenderPass(renderPassDescriptor);
   passEncoder?.setPipeline(pipeline);
   passEncoder?.setVertexBuffer(0, vertexBuffer);
-  passEncoder?.draw(6);
+  passEncoder?.setIndexBuffer(indicesBuffer, "uint16");
+  passEncoder?.drawIndexed(indices.length);
   passEncoder?.end();
 
   if (!commandEncoder) {
