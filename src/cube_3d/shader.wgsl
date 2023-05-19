@@ -1,3 +1,8 @@
+struct Uniforms {
+  modelViewProjectionMatrix: mat4x4<f32>,
+}
+@binding(0) @group(0)  var<uniform> uniforms: Uniforms;
+
 struct VertexOut {
   @builtin(position) position: vec4<f32>,
   @location(0) color: vec4<f32>
@@ -80,11 +85,15 @@ fn vertexShader(@location(0) position: vec4<f32>, @location(1) color: vec4<f32>)
     var output: VertexOut;
     var pos = position;
 
-    pos = translate(pos, vec3<f32>(0.0, 0.0, 0.0));
-    pos = scale(pos, vec3<f32>(0.5, 0.5, 0.5));
-    pos = rotate_x(pos, 0.0);
-    pos = rotate_y(pos, 0.0);
-    pos = rotate_z(pos, 0.0);
+    let tmp = uniforms.modelViewProjectionMatrix;
+
+    // pos = rotate_x(pos, 0.8);
+    // pos = rotate_y(pos, 0.8);
+    // pos = rotate_z(pos, 0.0);
+
+    // pos = translate(pos, vec3<f32>(0.0, 0.0, 1.0));
+    // pos = scale(pos, vec3<f32>(0.3, 0.3, 0.3));
+    pos = uniforms.modelViewProjectionMatrix * pos;
 
     output.position = pos;
     output.color = color;

@@ -1,5 +1,10 @@
 lockfileVersion: '6.0'
 
+dependencies:
+  wgpu-matrix:
+    specifier: ^2.2.2
+    version: 2.2.2
+
 devDependencies:
   '@webgpu/types':
     specifier: ^0.1.32
@@ -322,3 +327,7 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
     dev: true
+
+  /wgpu-matrix@2.2.2:
+    resolution: {integrity: sha512-v0rG1AvmNWESZXHiYIFCusTB9184wlDJKf8XNAlvqdqSU5RDCI5JJZUOhGPcqXHB8MgYeHxSEf/Gm4aodFc42w==}
+    dev: false

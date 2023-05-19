@@ -1,7 +1,9 @@
 import shader from "./shader.wgsl?raw";
+import { vertices, indices } from "./cube";
+import { mat4, vec3 } from "wgpu-matrix";
 
 async function init() {
-  const canvas = document.getElementById("webgpuCanvas") as any;
+  const canvas = document.getElementById("webgpuCanvas") as HTMLCanvasElement;
   const context = canvas?.getContext("webgpu") as GPUCanvasContext;
 
   if (!context) {
@@ -27,18 +29,6 @@ async function init() {
     // premultiplied: 背景透過あり
     alphaMode: "premultiplied",
   });
-
-  /* prettier-ignore */
-  // 前半4個が頂点座標(x,y,z,w)、後半4個が色情報(c_x,x_y,c_z,c_w)
-  // 合計で3頂点分のデータがある
-  const vertices = new Float32Array([
-    // 左上の三角形
-    -0.8, -0.8, 0, 1,    1, 0, 0, 1,  // 左下
-    -0.8, 0.8, 0, 1,     1, 1, 0, 1,  // 左上
-    0.8, 0.8, 0, 1,      0, 1, 1, 1,  // 右上
-    0.8, -0.8, 0, 1,     0, 0, 1, 1,  // 右下
- ]);
-  const indices = new Uint16Array([0, 1, 2, 0, 2, 3]);
 
   const vertexBuffer = device.createBuffer({
     size: vertices.byteLength,
@@ -98,6 +88,39 @@ async function init() {
     },
   });
 
+  // Matrix
+  const aspect = canvas.width / canvas.height;
+  const fov = (2 * Math.PI) / 5;
+  const projectionMatrix = mat4.perspective(fov, aspect, 1, 100.0);
+
+  const modelViewProjectionMatrix = mat4.create();
+  const viewMatrix = mat4.identity();
+  mat4.translate(viewMatrix, vec3.fromValues(0, 0, -4), viewMatrix);
+  mat4.rotate(
+    viewMatrix,
+    vec3.fromValues(Math.PI / 4, Math.PI / 4, 0),
+    1,
+    viewMatrix
+  );
+  mat4.multiply(projectionMatrix, viewMatrix, modelViewProjectionMatrix);
+
+  // Uniform Buffer
+  const uniformBuffer = device.createBuffer({
+    size: 4 * 16, // 4x4 matrix
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+  });
+  const uniformBindGroup = device.createBindGroup({
+    layout: pipeline.getBindGroupLayout(0),
+    entries: [
+      {
+        binding: 0,
+        resource: {
+          buffer: uniformBuffer,
+        },
+      },
+    ],
+  });
+
   // commandBuffer
   const commandEncoder = device?.createCommandEncoder();
 
@@ -118,6 +141,7 @@ async function init() {
   passEncoder?.setPipeline(pipeline);
   passEncoder?.setVertexBuffer(0, vertexBuffer);
   passEncoder?.setIndexBuffer(indicesBuffer, "uint16");
+  passEncoder?.setBindGroup(0, uniformBindGroup);
   passEncoder?.drawIndexed(indices.length);
   passEncoder?.end();
 

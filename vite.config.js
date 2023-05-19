@@ -15,6 +15,7 @@ export default {
         triangle_2d: resolve(root, "triangle_2d", "index.html"),
         square_2d: resolve(root, "square_2d", "index.html"),
         cube_3d: resolve(root, "cube_3d", "index.html"),
+        cube_3d_official: resolve(root, "cube_3d_official", "index.html"),
       },
     },
   },
