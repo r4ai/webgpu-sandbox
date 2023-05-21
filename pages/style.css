@@ -11,16 +11,20 @@ h1 {
   padding-bottom: 1em;
 }
 
-.page-links li {
+.wgpu-links li {
   margin-bottom: 0.5em;
 }
 
-.page-links li a {
+.wgpu-links li a {
   color: #007bff;
   text-decoration: none;
 }
 
-.page-links li a:hover {
+.wgpu-links li a:hover {
   color: #0056b3;
   text-decoration: underline;
+}
+
+#app {
+  position: relative;
 }

@@ -1,11 +1,13 @@
+import "../../components/sidebar";
+
+import { mat4, vec3 } from "wgpu-matrix";
 import {
   cubeVertexArray,
   cubeVertexSize,
+  cubeUVOffset,
   cubePositionOffset,
-  cubeColorOffset,
-  cubeIndicesArray,
+  cubeVertexCount,
 } from "./cube";
-
 import shader from "./shader.wgsl?raw";
 import { getAdapter, getCanvasByID, getContext, handle_error } from "../util";
 
@@ -52,10 +54,10 @@ async function init() {
               format: "float32x4",
             },
             {
-              // color
+              // uv
               shaderLocation: 1,
-              offset: cubeColorOffset,
-              format: "float32x4",
+              offset: cubeUVOffset,
+              format: "float32x2",
             },
           ],
         },
@@ -97,7 +99,7 @@ async function init() {
   });
 
   // Uniform buffer (変換行列を保存)
-  const uniformBufferSize = 4 * 4; // u32
+  const uniformBufferSize = 4 * 16; // 4x4 matrix
   const uniformBuffer = device.createBuffer({
     size: uniformBufferSize,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
@@ -113,19 +115,6 @@ async function init() {
       },
     ],
   });
-
-  // Index buffer
-  const indicesBuffer = device.createBuffer({
-    size: cubeIndicesArray.byteLength,
-    usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
-  });
-  device.queue.writeBuffer(
-    indicesBuffer,
-    0,
-    cubeIndicesArray,
-    0,
-    cubeIndicesArray.length
-  );
 
   const renderPassDescriptor: GPURenderPassDescriptor = {
     colorAttachments: [
@@ -145,16 +134,17 @@ async function init() {
   };
 
   const aspect = canvas.width / canvas.height;
-  let frameInfo = new Float32Array([0.8, 0.8, 0, 0]);
 
   function frame() {
-    const time = Date.now();
-    frameInfo[0] = Math.sin(time / 1000);
-    frameInfo[1] = Math.cos(time / 1000);
-    frameInfo[2] = aspect;
-
     // 座標返還行列を更新
-    device?.queue.writeBuffer(uniformBuffer, 0, frameInfo, 0, frameInfo.length);
+    const transformationMatrix = getTransformationMatrix(aspect);
+    device?.queue.writeBuffer(
+      uniformBuffer,
+      0,
+      transformationMatrix.buffer,
+      transformationMatrix.byteOffset,
+      transformationMatrix.byteLength
+    );
 
     // 画面を更新する
     /* @ts-ignore */
@@ -168,8 +158,7 @@ async function init() {
     passEncoder.setPipeline(pipeline);
     passEncoder.setBindGroup(0, uniformBindGroup);
     passEncoder.setVertexBuffer(0, verticesBuffer);
-    passEncoder.setIndexBuffer(indicesBuffer, "uint16");
-    passEncoder.drawIndexed(cubeIndicesArray.length);
+    passEncoder.draw(cubeVertexCount, 1, 0, 0);
     passEncoder.end();
     device?.queue.submit([commandEncoder.finish()]);
 
@@ -177,6 +166,20 @@ async function init() {
     requestAnimationFrame(frame);
   }
   frame();
+}
+
+function getTransformationMatrix(aspect: number) {
+  const now = Date.now() / 1000;
+  const projectionMatrix = mat4.perspective(Math.PI / 4, aspect, 1, 100.0);
+  let modelViewProjectionMatrix = mat4.create();
+  let viewMatrix = mat4.identity();
+
+  viewMatrix = mat4.translate(viewMatrix, vec3.fromValues(0, 0, -20));
+  viewMatrix = mat4.rotateX(viewMatrix, now);
+  viewMatrix = mat4.rotateY(viewMatrix, now);
+
+  modelViewProjectionMatrix = mat4.multiply(projectionMatrix, viewMatrix);
+  return modelViewProjectionMatrix as Float32Array;
 }
 
 window.addEventListener("DOMContentLoaded", () => handle_error(init));

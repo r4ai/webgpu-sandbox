@@ -1,3 +1,5 @@
+import "../../components/sidebar";
+
 import shader from "./shader.wgsl?raw";
 
 async function init() {

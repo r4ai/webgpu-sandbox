@@ -1,11 +1,11 @@
 import { resolve } from "path";
 
-const root = resolve(__dirname, "src");
+const root = resolve(__dirname, "pages");
 const outDir = resolve(__dirname, "dist");
 
 /** @type {import('vite').UserConfig} */
 export default {
-  base: "/webgpu-sandbox/",
+  base: `/webgpu-sandbox/`,
   root,
   build: {
     outDir,

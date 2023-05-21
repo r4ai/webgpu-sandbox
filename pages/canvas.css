@@ -1,0 +1,27 @@
+html, body, div#app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overscroll-behavior-y: none;
+  overflow-y: hidden;
+}
+
+#webgpuCanvas {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+#app {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  grid-template-rows: 1fr;
+  grid-template-areas: "sidebar canvas";
+  height: 100%;
+}
+
+#app main {
+  grid-area: canvas;
+  width: 100%;
+  height: 100%;
+}
