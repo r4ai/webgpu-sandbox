@@ -1,8 +1,8 @@
 import shader from "./shader.wgsl?raw";
 
 async function init() {
-  const canvas = document.getElementById("webgpuCanvas") as any;
-  const context = canvas?.getContext("webgpu") as GPUCanvasContext;
+  const canvas = document.getElementById("webgpuCanvas") as HTMLCanvasElement;
+  const context = canvas?.getContext("webgpu");
 
   if (!context) {
     alert("Please use Google Chrome. Your browser does not support WebGPU.");
