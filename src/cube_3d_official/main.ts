@@ -1,4 +1,4 @@
-import { mat4, vec3 } from "wgpu-matrix";
+import { mat4, vec3, vec4 } from "wgpu-matrix";
 
 import {
   cubeVertexArray,
@@ -148,33 +148,10 @@ async function init() {
   };
 
   const aspect = canvas.width / canvas.height;
-  const projectionMatrix = mat4.perspective(
-    (2 * Math.PI) / 5,
-    aspect,
-    1,
-    100.0
-  );
-  const modelViewProjectionMatrix = mat4.create();
-
-  function getTransformationMatrix() {
-    const viewMatrix = mat4.identity();
-    mat4.translate(viewMatrix, vec3.fromValues(0, 0, -4), viewMatrix);
-    const now = Date.now() / 1000;
-    mat4.rotate(
-      viewMatrix,
-      vec3.fromValues(Math.sin(now), Math.cos(now), 0),
-      1,
-      viewMatrix
-    );
-
-    mat4.multiply(projectionMatrix, viewMatrix, modelViewProjectionMatrix);
-
-    return modelViewProjectionMatrix as Float32Array;
-  }
 
   function frame() {
     // Sample is no longer the active page.
-    const transformationMatrix = getTransformationMatrix();
+    const transformationMatrix = getTransformationMatrix(aspect);
     device?.queue.writeBuffer(
       uniformBuffer,
       0,
@@ -200,6 +177,35 @@ async function init() {
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
+}
+
+function debug(mat4: Float32Array) {
+  let msg = "";
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      msg += mat4[i * 4 + j] + " ";
+    }
+    msg += "\n";
+  }
+  console.log(msg);
+}
+
+function getTransformationMatrix(aspect: number) {
+  let modelViewProjectionMatrix = mat4.create();
+
+  const projectionMatrix = mat4.perspective(Math.PI / 4, aspect, 1, 100.0);
+  debug(projectionMatrix);
+  const viewMatrix = mat4.identity();
+  mat4.translate(viewMatrix, vec3.fromValues(0, 0, -20), viewMatrix);
+  // alert(1);
+  const now = Date.now() / 1000;
+  mat4.rotateX(viewMatrix, now, viewMatrix);
+  mat4.rotateY(viewMatrix, now, viewMatrix);
+  mat4.multiply(projectionMatrix, viewMatrix, modelViewProjectionMatrix);
+  const tmp = vec4;
+  debug(modelViewProjectionMatrix);
+  alert();
+  return modelViewProjectionMatrix as Float32Array;
 }
 
 window.addEventListener("DOMContentLoaded", () => handle_error(init));

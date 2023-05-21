@@ -91,7 +91,7 @@ fn vertexShader(@location(0) position: vec4<f32>, @location(1) color: vec4<f32>)
     // pos = rotate_y(pos, 0.8);
     // pos = rotate_z(pos, 0.0);
 
-    // pos = translate(pos, vec3<f32>(0.0, 0.0, 1.0));
+    pos = translate(pos, vec3<f32>(0.0, 0.0, -10));
     // pos = scale(pos, vec3<f32>(0.3, 0.3, 0.3));
     pos = uniforms.modelViewProjectionMatrix * pos;
 
