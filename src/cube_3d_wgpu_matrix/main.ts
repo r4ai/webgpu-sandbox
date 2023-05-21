@@ -3,10 +3,9 @@ import { mat4, vec3 } from "wgpu-matrix";
 import {
   cubeVertexArray,
   cubeVertexSize,
+  cubeUVOffset,
   cubePositionOffset,
   cubeVertexCount,
-  cubeColorOffset,
-  cubeIndicesArray,
 } from "./cube";
 
 import shader from "./shader.wgsl?raw";
@@ -55,10 +54,10 @@ async function init() {
               format: "float32x4",
             },
             {
-              // color
+              // uv
               shaderLocation: 1,
-              offset: cubeColorOffset,
-              format: "float32x4",
+              offset: cubeUVOffset,
+              format: "float32x2",
             },
           ],
         },
@@ -117,19 +116,6 @@ async function init() {
     ],
   });
 
-  // Index buffer
-  const indicesBuffer = device.createBuffer({
-    size: cubeIndicesArray.byteLength,
-    usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
-  });
-  device.queue.writeBuffer(
-    indicesBuffer,
-    0,
-    cubeIndicesArray,
-    0,
-    cubeIndicesArray.length
-  );
-
   const renderPassDescriptor: GPURenderPassDescriptor = {
     colorAttachments: [
       {
@@ -172,8 +158,7 @@ async function init() {
     passEncoder.setPipeline(pipeline);
     passEncoder.setBindGroup(0, uniformBindGroup);
     passEncoder.setVertexBuffer(0, verticesBuffer);
-    passEncoder.setIndexBuffer(indicesBuffer, "uint16");
-    passEncoder.drawIndexed(cubeIndicesArray.length);
+    passEncoder.draw(cubeVertexCount, 1, 0, 0);
     passEncoder.end();
     device?.queue.submit([commandEncoder.finish()]);
 
@@ -189,7 +174,7 @@ function getTransformationMatrix(aspect: number) {
   let modelViewProjectionMatrix = mat4.create();
   let viewMatrix = mat4.identity();
 
-  viewMatrix = mat4.translate(viewMatrix, vec3.fromValues(0, 0, -15));
+  viewMatrix = mat4.translate(viewMatrix, vec3.fromValues(0, 0, -20));
   viewMatrix = mat4.rotateX(viewMatrix, now);
   viewMatrix = mat4.rotateY(viewMatrix, now);
 

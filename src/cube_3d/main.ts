@@ -1,74 +1,63 @@
+import {
+  cubeVertexArray,
+  cubeVertexSize,
+  cubePositionOffset,
+  cubeColorOffset,
+  cubeIndicesArray,
+} from "./cube";
+
 import shader from "./shader.wgsl?raw";
-import { vertices, indices } from "./cube";
-import { mat4, vec3 } from "wgpu-matrix";
+import { getAdapter, getCanvasByID, getContext, handle_error } from "../util";
 
 async function init() {
-  const canvas = document.getElementById("webgpuCanvas") as HTMLCanvasElement;
-  const context = canvas?.getContext("webgpu") as GPUCanvasContext;
+  // get adapter(物理デバイス) and device(論理デバイス)
+  const adapter = await getAdapter();
+  const device = await adapter.requestDevice();
+  console.log("Start initializing WebGPU...");
 
-  if (!context) {
-    alert("Please use Google Chrome. Your browser does not support WebGPU.");
-    return new Error("Failed to get WebGPU context");
-  } else {
-    console.info("Start initializing WebGPU...");
-  }
-
-  // get device
-  const adapter = await navigator.gpu.requestAdapter(); // 物理
-  const device = await adapter?.requestDevice(); // 論理
-
-  if (!device || !adapter) {
-    return new Error("Failed to get GPU device");
-  }
-
+  // get context
+  const canvas = getCanvasByID("webgpuCanvas");
   const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
-  context.configure({
-    device: device,
+  const context = getContext(canvas, {
+    device,
     format: presentationFormat,
-    // opaque: 背景透過なし
-    // premultiplied: 背景透過あり
     alphaMode: "premultiplied",
   });
 
-  const vertexBuffer = device.createBuffer({
-    size: vertices.byteLength,
-    // buffer will be used as a vertex buffer and the destination of copy operations.
-    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+  // Create a vertex buffer from the cube data.
+  const verticesBuffer = device.createBuffer({
+    size: cubeVertexArray.byteLength,
+    usage: GPUBufferUsage.VERTEX,
+    mappedAtCreation: true,
   });
-  const indicesBuffer = device.createBuffer({
-    size: indices.byteLength,
-    usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
-  });
+  new Float32Array(verticesBuffer.getMappedRange()).set(cubeVertexArray);
+  verticesBuffer.unmap();
 
-  device.queue.writeBuffer(vertexBuffer, 0, vertices, 0, vertices.length);
-  device.queue.writeBuffer(indicesBuffer, 0, indices, 0, indices.length);
-
-  // create a render pipeline
   const pipeline = device.createRenderPipeline({
     layout: "auto",
     vertex: {
       module: device.createShaderModule({
         code: shader,
       }),
-      entryPoint: "vertexShader",
+      entryPoint: "vertex_main",
       buffers: [
         {
+          arrayStride: cubeVertexSize,
+          stepMode: "vertex",
           attributes: [
             {
-              shaderLocation: 0, // position
-              offset: 0,
+              // position
+              shaderLocation: 0,
+              offset: cubePositionOffset,
               format: "float32x4",
             },
             {
-              shaderLocation: 1, // color
-              offset: 4 * 4,
+              // color
+              shaderLocation: 1,
+              offset: cubeColorOffset,
               format: "float32x4",
             },
           ],
-          // 各頂点を構成するデータのサイズ [bytes]
-          // 頂点座標(x,y,z,w) + 色情報(c_x,x_y,c_z,c_w) = 4 * 4 + 4 * 4 = 32 bytes
-          arrayStride: 32,
-          stepMode: "vertex",
         },
       ],
     },
@@ -76,7 +65,7 @@ async function init() {
       module: device.createShaderModule({
         code: shader,
       }),
-      entryPoint: "fragmentShader",
+      entryPoint: "fragment_main",
       targets: [
         {
           format: presentationFormat,
@@ -85,28 +74,32 @@ async function init() {
     },
     primitive: {
       topology: "triangle-list",
+
+      // Backface culling since the cube is solid piece of geometry.
+      // Faces pointing away from the camera will be occluded by faces
+      // pointing toward the camera.
+      cullMode: "back",
+    },
+
+    // Enable depth testing so that the fragment closest to the camera
+    // is rendered in front.
+    depthStencil: {
+      depthWriteEnabled: true,
+      depthCompare: "less",
+      format: "depth24plus",
     },
   });
 
-  // Matrix
-  const aspect = canvas.width / canvas.height;
-  const fov = (2 * Math.PI) / 5;
-  const projectionMatrix = mat4.perspective(fov, aspect, 1, 100.0);
+  const depthTexture = device.createTexture({
+    size: [canvas.width, canvas.height],
+    format: "depth24plus",
+    usage: GPUTextureUsage.RENDER_ATTACHMENT,
+  });
 
-  const modelViewProjectionMatrix = mat4.create();
-  const viewMatrix = mat4.identity();
-  mat4.translate(viewMatrix, vec3.fromValues(0, 0, -4), viewMatrix);
-  mat4.rotate(
-    viewMatrix,
-    vec3.fromValues(Math.PI / 4, Math.PI / 4, 0),
-    1,
-    viewMatrix
-  );
-  mat4.multiply(projectionMatrix, viewMatrix, modelViewProjectionMatrix);
-
-  // Uniform Buffer
+  // Uniform buffer (変換行列を保存)
+  const uniformBufferSize = 4 * 4; // u32
   const uniformBuffer = device.createBuffer({
-    size: 4 * 16, // 4x4 matrix
+    size: uniformBufferSize,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
   const uniformBindGroup = device.createBindGroup({
@@ -121,35 +114,69 @@ async function init() {
     ],
   });
 
-  // commandBuffer
-  const commandEncoder = device?.createCommandEncoder();
+  // Index buffer
+  const indicesBuffer = device.createBuffer({
+    size: cubeIndicesArray.byteLength,
+    usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
+  });
+  device.queue.writeBuffer(
+    indicesBuffer,
+    0,
+    cubeIndicesArray,
+    0,
+    cubeIndicesArray.length
+  );
 
-  const textureView = context.getCurrentTexture().createView();
-  const clearColor = { r: 0.0, g: 0.5, b: 1.0, a: 1.0 };
   const renderPassDescriptor: GPURenderPassDescriptor = {
     colorAttachments: [
       {
-        clearValue: clearColor,
+        clearValue: { r: 0.5, g: 0.5, b: 0.5, a: 1.0 },
         loadOp: "clear",
         storeOp: "store",
-        view: textureView,
+        view: context.getCurrentTexture().createView(),
       },
     ],
+    depthStencilAttachment: {
+      view: depthTexture.createView(),
+      depthClearValue: 1.0,
+      depthLoadOp: "clear",
+      depthStoreOp: "store",
+    },
   };
 
-  const passEncoder = commandEncoder?.beginRenderPass(renderPassDescriptor);
-  passEncoder?.setPipeline(pipeline);
-  passEncoder?.setVertexBuffer(0, vertexBuffer);
-  passEncoder?.setIndexBuffer(indicesBuffer, "uint16");
-  passEncoder?.setBindGroup(0, uniformBindGroup);
-  passEncoder?.drawIndexed(indices.length);
-  passEncoder?.end();
+  const aspect = canvas.width / canvas.height;
+  let frameInfo = new Float32Array([0.8, 0.8, 0, 0]);
 
-  if (!commandEncoder) {
-    return new Error("Failed to create command encoder");
+  function frame() {
+    const time = Date.now();
+    frameInfo[0] = Math.sin(time / 1000);
+    frameInfo[1] = Math.cos(time / 1000);
+    frameInfo[2] = aspect;
+
+    // 座標返還行列を更新
+    device?.queue.writeBuffer(uniformBuffer, 0, frameInfo, 0, frameInfo.length);
+
+    // 画面を更新する
+    /* @ts-ignore */
+    renderPassDescriptor.colorAttachments[0].view = context
+      .getCurrentTexture()
+      .createView();
+
+    // GPUにコマンドを送信
+    const commandEncoder = device.createCommandEncoder();
+    const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+    passEncoder.setPipeline(pipeline);
+    passEncoder.setBindGroup(0, uniformBindGroup);
+    passEncoder.setVertexBuffer(0, verticesBuffer);
+    passEncoder.setIndexBuffer(indicesBuffer, "uint16");
+    passEncoder.drawIndexed(cubeIndicesArray.length);
+    passEncoder.end();
+    device?.queue.submit([commandEncoder.finish()]);
+
+    // 次のフレームをリクエスト
+    requestAnimationFrame(frame);
   }
-  device?.queue.submit([commandEncoder.finish()]);
-  console.info("Hello, WebGPU!");
+  frame();
 }
 
-window.addEventListener("DOMContentLoaded", init);
+window.addEventListener("DOMContentLoaded", () => handle_error(init));
