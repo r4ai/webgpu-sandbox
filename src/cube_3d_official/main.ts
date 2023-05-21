@@ -1,4 +1,4 @@
-import { mat4, vec3, vec4 } from "wgpu-matrix";
+import { mat4, vec3 } from "wgpu-matrix";
 
 import {
   cubeVertexArray,
@@ -9,35 +9,21 @@ import {
 } from "./cube";
 
 import shader from "./shader.wgsl?raw";
-import { handle_error } from "../util";
+import { getAdapter, getCanvasByID, getContext, handle_error } from "../util";
 
 async function init() {
-  // get context
-  const canvas = document.getElementById("webgpuCanvas") as HTMLCanvasElement;
-  const context = canvas?.getContext("webgpu") as GPUCanvasContext;
-  if (!context) {
-    throw new Error(
-      "Please use Google Chrome. Your browser does not support WebGPU."
-    );
-  }
+  // get adapter(物理デバイス) and device(論理デバイス)
+  const adapter = await getAdapter();
+  const device = await adapter.requestDevice();
   console.log("Start initializing WebGPU...");
 
-  // get adapter(物理デバイス) and device(論理デバイス)
-  const adapter = await navigator.gpu.requestAdapter();
-  const device = await adapter?.requestDevice();
-  if (!adapter || !device) {
-    throw new Error("Failed to get GPU device");
-  }
-
-  // configure context
-  const devicePixelRatio = window.devicePixelRatio || 1;
-  canvas.width = canvas.clientWidth * devicePixelRatio;
-  canvas.height = canvas.clientHeight * devicePixelRatio;
+  // get context
+  const canvas = getCanvasByID("webgpuCanvas");
   const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
-  context.configure({
+  const context = getContext(canvas, {
     device,
     format: presentationFormat,
-    alphaMode: "premultiplied", // 背景透過あり
+    alphaMode: "premultiplied",
   });
 
   // Create a vertex buffer from the cube data.
@@ -150,7 +136,7 @@ async function init() {
   const aspect = canvas.width / canvas.height;
 
   function frame() {
-    // Sample is no longer the active page.
+    // 座標返還行列を更新
     const transformationMatrix = getTransformationMatrix(aspect);
     device?.queue.writeBuffer(
       uniformBuffer,
@@ -159,13 +145,15 @@ async function init() {
       transformationMatrix.byteOffset,
       transformationMatrix.byteLength
     );
+
+    // 画面を更新する
     /* @ts-ignore */
     renderPassDescriptor.colorAttachments[0].view = context
       .getCurrentTexture()
       .createView();
 
-    const commandEncoder = device?.createCommandEncoder();
-    if (!commandEncoder) return 1;
+    // GPUにコマンドを送信
+    const commandEncoder = device.createCommandEncoder();
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
     passEncoder.setPipeline(pipeline);
     passEncoder.setBindGroup(0, uniformBindGroup);
@@ -174,37 +162,23 @@ async function init() {
     passEncoder.end();
     device?.queue.submit([commandEncoder.finish()]);
 
+    // 次のフレームをリクエスト
     requestAnimationFrame(frame);
   }
-  requestAnimationFrame(frame);
-}
-
-function debug(mat4: Float32Array) {
-  let msg = "";
-  for (let i = 0; i < 4; i++) {
-    for (let j = 0; j < 4; j++) {
-      msg += mat4[i * 4 + j] + " ";
-    }
-    msg += "\n";
-  }
-  console.log(msg);
+  frame();
 }
 
 function getTransformationMatrix(aspect: number) {
-  let modelViewProjectionMatrix = mat4.create();
-
-  const projectionMatrix = mat4.perspective(Math.PI / 4, aspect, 1, 100.0);
-  debug(projectionMatrix);
-  const viewMatrix = mat4.identity();
-  mat4.translate(viewMatrix, vec3.fromValues(0, 0, -20), viewMatrix);
-  // alert(1);
   const now = Date.now() / 1000;
-  mat4.rotateX(viewMatrix, now, viewMatrix);
-  mat4.rotateY(viewMatrix, now, viewMatrix);
-  mat4.multiply(projectionMatrix, viewMatrix, modelViewProjectionMatrix);
-  const tmp = vec4;
-  debug(modelViewProjectionMatrix);
-  alert();
+  const projectionMatrix = mat4.perspective(Math.PI / 4, aspect, 1, 100.0);
+  let modelViewProjectionMatrix = mat4.create();
+  let viewMatrix = mat4.identity();
+
+  viewMatrix = mat4.translate(viewMatrix, vec3.fromValues(0, 0, -20));
+  viewMatrix = mat4.rotateX(viewMatrix, now);
+  viewMatrix = mat4.rotateY(viewMatrix, now);
+
+  modelViewProjectionMatrix = mat4.multiply(projectionMatrix, viewMatrix);
   return modelViewProjectionMatrix as Float32Array;
 }
 
