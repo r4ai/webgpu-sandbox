@@ -189,7 +189,7 @@ function getTransformationMatrix(aspect: number) {
   let modelViewProjectionMatrix = mat4.create();
   let viewMatrix = mat4.identity();
 
-  viewMatrix = mat4.translate(viewMatrix, vec3.fromValues(0, 0, -20));
+  viewMatrix = mat4.translate(viewMatrix, vec3.fromValues(0, 0, -15));
   viewMatrix = mat4.rotateX(viewMatrix, now);
   viewMatrix = mat4.rotateY(viewMatrix, now);
 
