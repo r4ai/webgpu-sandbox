@@ -4,7 +4,6 @@ import {
   cubeVertexArray,
   cubeVertexSize,
   cubePositionOffset,
-  cubeColorOffset,
   cubeIndicesArray,
 } from "./cube.js";
 
