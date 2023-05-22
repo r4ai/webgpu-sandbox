@@ -1,4 +1,9 @@
-# WebGPU Sandbox
+# WebGPU Sandbox 🌐
+
+自分の学習用に作った WebGPU のサンプルコードを置いていく場所。  
+余分なライブラリは極力使わず、WebGPU の API のみで実装している。
+
+## Table of Contents
 
 - triangle_2d
 - square_2d
@@ -20,6 +25,17 @@ pnpm build
 # Preview build
 pnpm preview
 ```
+
+### Requirements
+
+- [pnpm](https://pnpm.io/)
+- [Node.js](https://nodejs.org/en/)
+
+### Tech Stack
+
+- [webGPU](https://gpuweb.github.io/gpuweb/) - Graphics API
+- [Vite](https://vitejs.dev/) - Build tool
+- [TypeScript](https://www.typescriptlang.org/) - Programming language
 
 ### 新規ページの作成
 
