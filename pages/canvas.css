@@ -20,6 +20,14 @@ html, body, div#app {
   height: 100%;
 }
 
+@media (max-width: 768px) {
+  #app {
+    grid-template-columns: 1fr;
+    grid-template-rows: 25vh 1fr;
+    grid-template-areas: "sidebar" "canvas";
+  }
+}
+
 #app main {
   grid-area: canvas;
   width: 100%;
