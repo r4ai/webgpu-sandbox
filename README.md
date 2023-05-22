@@ -9,6 +9,7 @@
 - square_2d
 - cube_3d
 - cube_3d_wgpu_matrix
+- cube_3d_texture
 
 ## Development
 
