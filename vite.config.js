@@ -16,6 +16,7 @@ export default {
         square_2d: resolve(root, "square_2d", "index.html"),
         cube_3d: resolve(root, "cube_3d", "index.html"),
         cube_3d_wgpu_matrix: resolve(root, "cube_3d_wgpu_matrix", "index.html"),
+        cube_3d_texture: resolve(root, "cube_3d_texture", "index.html"),
       },
     },
   },

@@ -43,3 +43,11 @@ pnpm preview
 2. `vite.config.js` の `build.rollupOptions.input.[name]` に、作成したフォルダのパスを追加する。
 3. `components/links.html` の `body > ul.page-links` に、作成したページを追加する。
 4. `README.md` の最初のとこに、ページの名前を追加する。
+
+## References
+
+- [WebGPU 入門 @emadurandal | Zenn.dev](https://zenn.dev/emadurandal/books/cb6818fd3a1b2e)
+- [初めての WebGPU アプリ | Google](https://codelabs.developers.google.com/your-first-webgpu-app?hl=ja#0)
+- [Rust wgpu で 3DCG に挑戦する @namn1125 | Qiita](https://qiita.com/namn1125/items/1a5242f6e8bced9c0642)
+- [3DCG の基礎知識 Obj ファイルを描画するまで @namn1125 | Qiita](https://qiita.com/namn1125/items/44356be38b55ceb652fb)
+- [WebGL の基本 | webglfundamentals.org](https://webglfundamentals.org/webgl/lessons/ja/)

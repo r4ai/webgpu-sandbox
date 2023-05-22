@@ -4,6 +4,14 @@ export const cubeColorOffset = 4 * 4; // Byte offset of cube vertex color attrib
 export const cubeVertexCount = 24;
 
 /* prettier-ignore */
+//  -1,1,-1  1,1,-1
+//     +------+
+//    /|     /|
+//   +------+ |
+//   | +----|-+ 1,-1,-1
+//   |/     |/
+//   +------+
+// -1,-1,1  1,-1,1
 export const cubeVertexArray = new Float32Array([
   // 背面 (赤)
   -1, -1, -1, 1,    1, 0, 0, 1,  // 左下
@@ -44,10 +52,10 @@ export const cubeVertexArray = new Float32Array([
 
 /* prettier-ignore */
 export const cubeIndicesArray = new Uint16Array([
-  // 前面
+  // 背面
   3, 2, 1, 3, 1, 0,
 
-  // 背面
+  // 前面
   4, 5, 6, 4, 6, 7,
 
   // 左面

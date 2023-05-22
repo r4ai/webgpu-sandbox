@@ -49,3 +49,12 @@ export async function getAdapter() {
   }
   return adapter;
 }
+
+export async function getTexture(path: string) {
+  const img = document.createElement("img");
+  img.crossOrigin = "Anonymous";
+  img.src = path;
+  await img.decode();
+  const imageBitmap = await createImageBitmap(img);
+  return imageBitmap;
+}
