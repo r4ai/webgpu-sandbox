@@ -1,4 +1,5 @@
 import "../../components/sidebar.js";
+import textureUrl from "./arrow_texture.jpg";
 
 import {
   cubeVertexArray,
@@ -105,7 +106,7 @@ async function init() {
   });
 
   // Texture
-  const img = await getTexture("./arrow.jpg");
+  const img = await getTexture(textureUrl);
   const texture = device.createTexture({
     size: [img.width, img.height, 1],
     format: "rgba8unorm",
