@@ -1,10 +1,4 @@
-export function handle_error(init: Function) {
-  try {
-    init();
-  } catch (error) {
-    alert(error);
-  }
-}
+import { ERR_MSG } from "../libs/constants";
 
 export function debug(mat4: Float32Array | ArrayLike<number>) {
   let msg = "";
@@ -17,10 +11,20 @@ export function debug(mat4: Float32Array | ArrayLike<number>) {
   console.log(msg);
 }
 
+export function isWebGPUSupported() {
+  return navigator.gpu ? true : false;
+}
+
+export function checkWebGPUSupport() {
+  if (!isWebGPUSupported()) {
+    throw new Error(ERR_MSG.WEBGPU_NOT_SUPPORTED);
+  }
+}
+
 export function getCanvasByID(id: string) {
   const canvas = document.getElementById(id) as HTMLCanvasElement | null;
   if (!canvas) {
-    throw new Error(`No canvas with id: ${id}`);
+    throw new Error(ERR_MSG.NO_CANVAS);
   }
   const devicePixelRatio = window.devicePixelRatio || 1;
   canvas.width = canvas.clientWidth * devicePixelRatio;
@@ -34,9 +38,7 @@ export function getContext(
 ) {
   const context = canvas?.getContext("webgpu");
   if (!context) {
-    throw new Error(
-      "Please use Google Chrome or Edge. Your browser does not support WebGPU."
-    );
+    throw new Error(ERR_MSG.WEBGPU_NOT_SUPPORTED);
   }
   context.configure(config);
   return context;
@@ -45,7 +47,7 @@ export function getContext(
 export async function getAdapter() {
   const adapter = await navigator.gpu.requestAdapter();
   if (!adapter) {
-    throw new Error("No GPU found.");
+    throw new Error(ERR_MSG.NO_GPU);
   }
   return adapter;
 }

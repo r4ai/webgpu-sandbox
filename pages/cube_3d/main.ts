@@ -9,10 +9,16 @@ import {
 } from "./cube";
 
 import shader from "./shader.wgsl?raw";
-import { getAdapter, getCanvasByID, getContext, handle_error } from "../util";
+import {
+  checkWebGPUSupport,
+  getAdapter,
+  getCanvasByID,
+  getContext,
+} from "../../libs/util.js";
 
 async function init() {
   // get adapter(物理デバイス) and device(論理デバイス)
+  checkWebGPUSupport();
   const adapter = await getAdapter();
   const device = await adapter.requestDevice();
   console.log("Start initializing WebGPU...");
@@ -181,4 +187,6 @@ async function init() {
   frame();
 }
 
-window.addEventListener("DOMContentLoaded", () => handle_error(init));
+window.addEventListener("DOMContentLoaded", () =>
+  init().catch((e) => alert(e))
+);
