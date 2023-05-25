@@ -10,6 +10,7 @@
 - cube_3d
 - cube_3d_wgpu_matrix
 - cube_3d_texture
+- triangle_2d_msaa
 
 ## Development
 

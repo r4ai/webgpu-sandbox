@@ -17,6 +17,7 @@ export default {
         cube_3d: resolve(root, "cube_3d", "index.html"),
         cube_3d_wgpu_matrix: resolve(root, "cube_3d_wgpu_matrix", "index.html"),
         cube_3d_texture: resolve(root, "cube_3d_texture", "index.html"),
+        triangle_2d_msaa: resolve(root, "triangle_2d_msaa", "index.html"),
       },
     },
   },
