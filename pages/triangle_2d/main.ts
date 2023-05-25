@@ -1,4 +1,5 @@
 import "../../components/sidebar";
+import { ERR_MSG } from "../../libs/constants";
 
 import shader from "./shader.wgsl?raw";
 
@@ -7,8 +8,7 @@ async function init() {
   const context = canvas?.getContext("webgpu");
 
   if (!context) {
-    alert("Please use Google Chrome. Your browser does not support WebGPU.");
-    return new Error("Failed to get WebGPU context");
+    return new Error(ERR_MSG.WEBGPU_NOT_SUPPORTED);
   } else {
     console.info("Start initializing WebGPU...");
   }
@@ -18,7 +18,7 @@ async function init() {
   const device = await adapter?.requestDevice(); // 論理
 
   if (!device || !adapter) {
-    return new Error("Failed to get GPU device");
+    return new Error(ERR_MSG.NO_GPU);
   }
 
   const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
@@ -113,7 +113,7 @@ async function init() {
   passEncoder?.end();
 
   if (!commandEncoder) {
-    return new Error("Failed to create command encoder");
+    return new Error(ERR_MSG.NO_COMMAND_BUFFER);
   }
   device?.queue.submit([commandEncoder.finish()]);
   console.info("Hello, WebGPU!");

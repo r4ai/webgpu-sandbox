@@ -22,5 +22,5 @@
     /* types */
     "typeRoots": ["./node_modules/@webgpu/types", "./node_modules/@types"]
   },
-  "include": ["pages", "components/sidebar.ts", "libs/util.ts"]
+  "include": ["pages", "components/sidebar.ts", "libs/util.ts", "vite-env.d.ts"]
 }

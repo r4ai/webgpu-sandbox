@@ -3,4 +3,5 @@ export const ERR_MSG = {
     "Please use Google Chrome or Edge. Your browser does not support WebGPU.",
   NO_GPU: "No GPU found.",
   NO_CANVAS: "No canvas found.",
+  NO_COMMAND_BUFFER: "Failed to create command encoder.",
 };
