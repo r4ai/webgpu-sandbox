@@ -8,7 +8,7 @@ async function init() {
   const context = canvas?.getContext("webgpu");
 
   if (!context) {
-    return new Error(ERR_MSG.WEBGPU_NOT_SUPPORTED);
+    throw new Error(ERR_MSG.WEBGPU_NOT_SUPPORTED);
   } else {
     console.info("Start initializing WebGPU...");
   }
@@ -18,7 +18,7 @@ async function init() {
   const device = await adapter?.requestDevice(); // 論理
 
   if (!device || !adapter) {
-    return new Error(ERR_MSG.NO_GPU);
+    throw new Error(ERR_MSG.NO_GPU);
   }
 
   const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
@@ -113,10 +113,10 @@ async function init() {
   passEncoder?.end();
 
   if (!commandEncoder) {
-    return new Error(ERR_MSG.NO_COMMAND_BUFFER);
+    throw new Error(ERR_MSG.NO_COMMAND_BUFFER);
   }
   device?.queue.submit([commandEncoder.finish()]);
   console.info("Hello, WebGPU!");
 }
 
-window.addEventListener("DOMContentLoaded", init);
+window.addEventListener("DOMContentLoaded", () => init().catch(alert));
